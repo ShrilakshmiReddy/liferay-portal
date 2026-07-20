@@ -2303,6 +2303,21 @@ public class JenkinsResultsParserUtil {
 		}
 	}
 
+	public static long getJenkinsBuildQueueId(String location) {
+		if (isNullOrEmpty(location)) {
+			return 0L;
+		}
+
+		Matcher jenkinsBuildQueueURLMatcher =
+			_jenkinsBuildQueueURLPattern.matcher(location);
+
+		if (!jenkinsBuildQueueURLMatcher.find()) {
+			return 0L;
+		}
+
+		return Long.parseLong(jenkinsBuildQueueURLMatcher.group("queueId"));
+	}
+
 	public static String getJenkinsBuildResult(String buildURL) {
 		try {
 			JSONObject jsonObject = toJSONObject(
@@ -3685,49 +3700,10 @@ public class JenkinsResultsParserUtil {
 			sb.append("token=");
 			sb.append(getBuildProperty("jenkins.authentication.token"));
 
-			URL urlObject = new URL(fixURL(sb.toString()));
-
-			HttpURLConnection httpURLConnection =
-				(HttpURLConnection)urlObject.openConnection();
-
-			if (timeout != 0) {
-				httpURLConnection.setConnectTimeout(timeout);
-				httpURLConnection.setReadTimeout(timeout);
-			}
-
-			HTTPAuthorization httpAuthorization = getJenkinsHTTPAuthorization();
-
-			httpURLConnection.setRequestProperty(
-				"Authorization", httpAuthorization.toString());
-
-			httpURLConnection.connect();
-
-			int responseCode = httpURLConnection.getResponseCode();
-
-			System.out.println(
-				combine(
-					"Response from ", urlObject.toString(), ": ",
-					String.valueOf(responseCode), " ",
-					httpURLConnection.getResponseMessage()));
-
-			if (responseCode >= 400) {
-				return 0;
-			}
-
-			String location = httpURLConnection.getHeaderField("Location");
-
-			if (isNullOrEmpty(location)) {
-				return 0L;
-			}
-
-			Matcher jenkinsBuildQueueURLMatcher =
-				_jenkinsBuildQueueURLPattern.matcher(location);
-
-			if (!jenkinsBuildQueueURLMatcher.find()) {
-				return 0L;
-			}
-
-			return Long.parseLong(jenkinsBuildQueueURLMatcher.group("queueId"));
+			return getJenkinsBuildQueueId(
+				UrlReader.getResponseHeader(
+					"Location", getJenkinsHTTPAuthorization(),
+					HttpRequestMethod.GET, null, timeout, sb.toString()));
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(
