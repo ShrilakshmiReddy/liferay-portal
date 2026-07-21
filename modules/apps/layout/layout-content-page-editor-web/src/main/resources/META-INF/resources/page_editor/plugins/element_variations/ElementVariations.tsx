@@ -7,6 +7,7 @@ import ClayButton from '@clayui/button';
 import {Option, Picker} from '@clayui/core';
 import ClayEmptyState from '@clayui/empty-state';
 import ClayIcon from '@clayui/icon';
+import ClayLink from '@clayui/link';
 import {useId} from 'frontend-js-components-web';
 import React, {useReducer, useRef} from 'react';
 
@@ -31,6 +32,7 @@ import './ElementVariations.scss';
 interface Props {
 	addElementVariationURL: string;
 	audiences: Array<{label: string; value: string}>;
+	createAudienceURL: string;
 	defaultLanguageId: string;
 	deleteElementVariationURL: string;
 	elementVariations: Array<LoadedElementVariation>;
@@ -79,6 +81,7 @@ function getOrderedAudiences(
 function ElementVariations({
 	addElementVariationURL,
 	audiences = [],
+	createAudienceURL,
 	defaultLanguageId,
 	deleteElementVariationURL,
 	elementVariations: initialElementVariations = [],
@@ -125,6 +128,12 @@ function ElementVariations({
 
 	const elementVariationsPreviewRef =
 		useRef<ElementVariationsPreviewRef>(null);
+
+	const createElementVariationDraft = () =>
+		dispatch({
+			draftElementVariation: createElementVariation(experienceKey),
+			type: 'CREATE_ELEMENT_VARIATION_DRAFT',
+		});
 
 	return (
 		<div className="d-flex element-variations flex-column">
@@ -181,7 +190,7 @@ function ElementVariations({
 								</span>
 							</div>
 
-							<div className="flex-grow-1">
+							<div className="flex-grow-1 overflow-auto">
 								<div className="p-3">
 									<label htmlFor={experienceId}>
 										{Liferay.Language.get('experience')}
@@ -226,31 +235,58 @@ function ElementVariations({
 									}
 								/>
 
-								<div className="d-flex justify-content-start m-3">
-									<ClayButton
-										className="w-100"
-										displayType="secondary"
-										onClick={() =>
-											dispatch({
-												draftElementVariation:
-													createElementVariation(
-														experienceKey
-													),
-												type: 'CREATE_ELEMENT_VARIATION_DRAFT',
-											})
-										}
-									>
-										<ClayIcon
-											className="mr-2"
-											symbol="plus"
-										/>
+								{experienceElementVariations.length ? (
+									<div className="d-flex justify-content-start m-3">
+										<ClayButton
+											className="w-100"
+											displayType="secondary"
+											onClick={
+												createElementVariationDraft
+											}
+										>
+											<ClayIcon
+												className="mr-2"
+												symbol="plus"
+											/>
 
-										{Liferay.Language.get('new-variation')}
-									</ClayButton>
-								</div>
+											{Liferay.Language.get(
+												'new-variation'
+											)}
+										</ClayButton>
+									</div>
+								) : null}
 
 								<div className="border-top pt-3">
-									{experienceElementVariations.length ? (
+									{!audiences.length ? (
+										<ClayEmptyState
+											className="mb-0 px-3"
+											description={Liferay.Language.get(
+												'you-need-at-least-one-audience-to-build-element-variations'
+											)}
+											imgSrc={`${Liferay.ThemeDisplay.getPathThemeImages()}/states/empty_state.svg`}
+											small
+											title={Liferay.Language.get(
+												'no-element-variations'
+											)}
+										>
+											<ClayLink
+												button
+												displayType="secondary"
+												href={createAudienceURL}
+												small
+												target="_blank"
+											>
+												<ClayIcon
+													className="mr-2"
+													symbol="shortcut"
+												/>
+
+												{Liferay.Language.get(
+													'create-new-audience'
+												)}
+											</ClayLink>
+										</ClayEmptyState>
+									) : experienceElementVariations.length ? (
 										<ElementVariationsList
 											audiences={audiences}
 											editableElementOptions={
@@ -311,9 +347,19 @@ function ElementVariations({
 											imgSrc={`${Liferay.ThemeDisplay.getPathThemeImages()}/states/empty_state.svg`}
 											small
 											title={Liferay.Language.get(
-												'no-variations-yet'
+												'no-element-variations'
 											)}
-										/>
+										>
+											<ClayButton
+												displayType="secondary"
+												onClick={
+													createElementVariationDraft
+												}
+												size="sm"
+											>
+												{Liferay.Language.get('new')}
+											</ClayButton>
+										</ClayEmptyState>
 									)}
 								</div>
 							</div>

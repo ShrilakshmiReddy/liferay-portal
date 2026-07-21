@@ -9,6 +9,7 @@ import ClayForm, {ClayCheckbox, ClayInput, ClayToggle} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayMultiSelect from '@clayui/multi-select';
 import {useId} from 'frontend-js-components-web';
+import {sub} from 'frontend-js-web';
 import React, {useState} from 'react';
 
 import CodeEditorField from './CodeEditorField';
@@ -82,6 +83,11 @@ export default function ElementVariationForm({
 		elementVariation
 	);
 
+	const editing = elementVariations.some(
+		(existingElementVariation) =>
+			existingElementVariation.key === elementVariation.key
+	);
+
 	const [errors, setErrors] = useState<{
 		audience?: boolean;
 		name?: boolean;
@@ -113,7 +119,15 @@ export default function ElementVariationForm({
 				/>
 
 				<span className="font-weight-bold">
-					{Liferay.Language.get('element-variation')}
+					{editing
+						? sub(
+								Liferay.Language.get('edit-x'),
+								Liferay.Language.get('variation')
+							)
+						: sub(
+								Liferay.Language.get('new-x'),
+								Liferay.Language.get('variation')
+							)}
 				</span>
 
 				<div className="ml-auto">
@@ -394,7 +408,10 @@ export default function ElementVariationForm({
 							</ClayButton>
 						</div>
 
-						<ClayForm.Group className="my-4" small>
+						<ClayForm.Group
+							className="align-items-center d-flex my-4"
+							small
+						>
 							<ClayCheckbox
 								checked={!elementVariation.active}
 								disabled={translating}
@@ -405,6 +422,12 @@ export default function ElementVariationForm({
 									onChange({active: !event.target.checked})
 								}
 							/>
+
+							{translating ? (
+								<span className="element-variations__not-localizable-label font-weight-lighter mb-1 ml-2 text-2">
+									({Liferay.Language.get('not-localizable')})
+								</span>
+							) : null}
 						</ClayForm.Group>
 					</>
 				) : null}
@@ -456,7 +479,7 @@ export default function ElementVariationForm({
 function RequiredFieldFeedback() {
 	return (
 		<ClayForm.FeedbackGroup role="alert">
-			<ClayForm.FeedbackItem>
+			<ClayForm.FeedbackItem className="text-2">
 				<ClayForm.FeedbackIndicator symbol="times-circle-full" />
 
 				{Liferay.Language.get('this-field-is-required')}
