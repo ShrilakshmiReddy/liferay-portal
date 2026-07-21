@@ -1246,8 +1246,10 @@ public class JenkinsResultsParserUtil {
 		Map<String, String> buildParameters = getBuildParameters(
 			buildURL, parentBuild);
 
-		if (buildParameters.containsKey(key)) {
-			return buildParameters.get(key);
+		String buildParameter = buildParameters.get(key);
+
+		if (buildParameter != null) {
+			return buildParameter;
 		}
 
 		throw new RuntimeException(
@@ -1760,11 +1762,9 @@ public class JenkinsResultsParserUtil {
 			String timeStamp = String.valueOf(getCurrentTimeMillis());
 
 			synchronized (_timeStamps) {
-				if (_timeStamps.contains(timeStamp)) {
+				if (!_timeStamps.add(timeStamp)) {
 					continue;
 				}
-
-				_timeStamps.add(timeStamp);
 			}
 
 			return timeStamp;
