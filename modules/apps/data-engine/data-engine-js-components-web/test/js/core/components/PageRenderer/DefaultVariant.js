@@ -12,16 +12,22 @@ import {
 	PageHeader,
 } from '../../../../../src/main/resources/META-INF/resources/js/core/components/PageRenderer/DefaultVariant.es';
 
+let mockPortletId = 'test.portlet';
+
 jest.mock(
 	'../../../../../src/main/resources/META-INF/resources/js/core/hooks/useForm.es',
 	() => ({
 		useFormState: () => ({
-			portletId: 'test.portlet',
+			portletId: mockPortletId,
 		}),
 	})
 );
 
 describe('DefaultVariant Page', () => {
+	beforeEach(() => {
+		mockPortletId = 'test.portlet';
+	});
+
 	it('renders page container with role="group" and aria attributes', () => {
 		render(
 			<Page
@@ -63,5 +69,72 @@ describe('DefaultVariant Page', () => {
 			'id',
 			'pageDescription1'
 		);
+	});
+
+	it('renders no aria attributes without a header', () => {
+		render(<Page header={null} pageIndex={0} />);
+
+		const group = screen.getByRole('group');
+
+		expect(group).not.toHaveAttribute('aria-labelledby');
+		expect(group).not.toHaveAttribute('aria-describedby');
+	});
+
+	it('renders no aria attributes with a custom header', () => {
+		render(<Page header={<div>Custom Header</div>} pageIndex={0} />);
+
+		const group = screen.getByRole('group');
+
+		expect(group).not.toHaveAttribute('aria-labelledby');
+		expect(group).not.toHaveAttribute('aria-describedby');
+	});
+
+	it('renders no aria-describedby in the web content portlet', () => {
+		mockPortletId =
+			'com_liferay_journal_web_portlet_JournalPortlet_INSTANCE_test';
+
+		render(
+			<Page
+				header={
+					<PageHeader
+						description="Page Description"
+						title="Page Title"
+					/>
+				}
+				pageIndex={0}
+			/>
+		);
+
+		const group = screen.getByRole('group');
+
+		expect(group).toHaveAttribute('aria-labelledby', 'pageTitle0');
+		expect(group).not.toHaveAttribute('aria-describedby');
+
+		expect(screen.queryByText('Page Description')).not.toBeInTheDocument();
+	});
+
+	it('renders no aria-describedby without a description', () => {
+		render(
+			<Page header={<PageHeader title="Page Title" />} pageIndex={0} />
+		);
+
+		const group = screen.getByRole('group');
+
+		expect(group).toHaveAttribute('aria-labelledby', 'pageTitle0');
+		expect(group).not.toHaveAttribute('aria-describedby');
+	});
+
+	it('renders no aria-labelledby without a title', () => {
+		render(
+			<Page
+				header={<PageHeader description="Page Description" />}
+				pageIndex={0}
+			/>
+		);
+
+		const group = screen.getByRole('group');
+
+		expect(group).not.toHaveAttribute('aria-labelledby');
+		expect(group).toHaveAttribute('aria-describedby', 'pageDescription0');
 	});
 });
