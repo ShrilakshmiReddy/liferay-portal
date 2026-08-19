@@ -34,7 +34,7 @@ export function TextField({field, onValueSelect, value}) {
 				component={component}
 				id={inputId}
 				onBlur={(event) => {
-					if (event.target.checkValidity()) {
+					if (isValidValue(event.target, field.typeOptions)) {
 						setErrorMessage('');
 
 						if (nextValue !== value) {
@@ -43,7 +43,7 @@ export function TextField({field, onValueSelect, value}) {
 					}
 				}}
 				onChange={(event) => {
-					if (event.target.validity.valid) {
+					if (isValidValue(event.target, field.typeOptions)) {
 						setErrorMessage('');
 					}
 					else {
@@ -61,7 +61,10 @@ export function TextField({field, onValueSelect, value}) {
 					setNextValue(event.target.value);
 				}}
 				onKeyDown={(event) => {
-					if (event.key === 'Enter' && event.target.checkValidity()) {
+					if (
+						event.key === 'Enter' &&
+						isValidValue(event.target, field.typeOptions)
+					) {
 						setErrorMessage('');
 
 						if (nextValue !== value) {
@@ -95,6 +98,34 @@ export function TextField({field, onValueSelect, value}) {
 	);
 }
 
+function assignLengthValidators(properties, additionalProps) {
+	if (Number.isInteger(properties.minLength)) {
+		additionalProps.minLength = properties.minLength;
+
+		if (properties.minLength > 0) {
+			additionalProps.required = true;
+		}
+	}
+
+	if (Number.isInteger(properties.maxLength)) {
+		additionalProps.maxLength = properties.maxLength;
+	}
+}
+
+function isValidValue(target, typeOptions = {}) {
+	if (!target.checkValidity()) {
+		return false;
+	}
+
+	const minLength = typeOptions.validation?.minLength;
+
+	if (Number.isInteger(minLength) && minLength > 0) {
+		return target.value.trim().length >= minLength;
+	}
+
+	return true;
+}
+
 function parseTypeOptions(typeOptions = {}) {
 	if (!typeOptions.validation) {
 		return {...typeOptions, type: 'text'};
@@ -111,13 +142,7 @@ function parseTypeOptions(typeOptions = {}) {
 	if (!validationType || validationType === 'text') {
 		result.type = 'text';
 
-		if (Number.isInteger(properties.minLength)) {
-			result.additionalProps.minLength = properties.minLength;
-		}
-
-		if (Number.isInteger(properties.maxLength)) {
-			result.additionalProps.maxLength = properties.maxLength;
-		}
+		assignLengthValidators(properties, result.additionalProps);
 	}
 
 	if (validationType === 'pattern') {
@@ -127,13 +152,7 @@ function parseTypeOptions(typeOptions = {}) {
 	if (validationType === 'url' || validationType === 'email') {
 		result.type = validationType;
 
-		if (Number.isInteger(properties.minLength)) {
-			result.additionalProps.minLength = properties.minLength;
-		}
-
-		if (Number.isInteger(properties.maxLength)) {
-			result.additionalProps.maxLength = properties.maxLength;
-		}
+		assignLengthValidators(properties, result.additionalProps);
 	}
 
 	if (validationType === 'number') {
