@@ -211,9 +211,20 @@ function SelectVocabularies({
 		}
 	}, []); //eslint-disable-line
 
-	const _handleFetchVocabularyTree = () => {
-		setVocabularyTreeLoading(true);
+	const _fetchJSON = (url) =>
+		fetch(url, CONFIGURATION).then((response) => response.json());
 
+	const _fetchAssetLibraries = () =>
+		_fetchJSON(
+			`/o/headless-asset-library/v1.0/asset-libraries?page=0&pageSize=0`
+		).then((response) =>
+			(response?.items || []).map((assetLibrary) => ({
+				...assetLibrary,
+				descriptiveName: assetLibrary.name,
+			}))
+		);
+
+	const _fetchSites = () =>
 		fetch(`/api/jsonws/invoke`, {
 			body: new URLSearchParams({
 				cmd: JSON.stringify({
@@ -229,75 +240,68 @@ function SelectVocabularies({
 			method: 'POST',
 		})
 			.then((response) => response.json())
-			.then((items) => {
+			.then((items) => items.filter(({site}) => !!site));
 
-				// Filter out results that are not a site.
+	const _fetchVocabularies = (url, isOwnedByGroup) =>
+		_fetchJSON(url).then((response) =>
+			(response?.items || []).filter(isOwnedByGroup)
+		);
 
-				const itemsFilteredForSites = items.filter(({site}) => !!site);
+	const _fetchAssetLibraryVocabularies = (assetLibrary) =>
+		_fetchVocabularies(
+			`/o/headless-admin-taxonomy/v1.0/asset-libraries/${assetLibrary.siteId}/taxonomy-vocabularies?page=0&pageSize=0`,
+			({assetLibraryKey}) =>
+				assetLibraryKey === assetLibrary.assetLibraryKey
+		).then((vocabularies) => ({group: assetLibrary, vocabularies}));
 
-				Promise.all(
-					itemsFilteredForSites.map((site) =>
-						fetch(
-							`/o/headless-admin-taxonomy/v1.0/sites/${site.groupId}/taxonomy-vocabularies?page=0&pageSize=0`,
-							CONFIGURATION
-						).then((response) => response.json())
-					)
-				)
-					.then((responses) => {
-						const fetchedExternalReferenceCodes = [];
+	const _fetchSiteVocabularies = (site) =>
+		_fetchVocabularies(
+			`/o/headless-admin-taxonomy/v1.0/sites/${site.groupId}/taxonomy-vocabularies?page=0&pageSize=0`,
+			({siteId}) => siteId?.toString() === site.groupId.toString()
+		).then((vocabularies) => ({group: site, vocabularies}));
 
-						setVocabularyTree(
-							responses.map((response, index) => ({
-								...itemsFilteredForSites[index],
-								children: (response?.items || [])
-									.filter(({siteId}) => {
+	const _handleFetchVocabularyTree = () => {
+		setVocabularyTreeLoading(true);
 
-										// Filter out global vocabularies for
-										// non-global sites.
+		Promise.all([_fetchSites(), _fetchAssetLibraries()])
+			.then(([sites, assetLibraries]) =>
+				Promise.all([
+					...sites.map(_fetchSiteVocabularies),
+					...assetLibraries.map(_fetchAssetLibraryVocabularies),
+				])
+			)
+			.then((groupVocabularies) => {
+				const fetchedExternalReferenceCodes = [];
 
-										const isGlobalSite =
-											itemsFilteredForSites[index]
-												.groupId ===
-											Liferay.ThemeDisplay.getCompanyGroupId();
+				setVocabularyTree(
+					groupVocabularies.map(({group, vocabularies}) => ({
+						...group,
+						children: vocabularies.map((vocabulary) => {
+							const externalReferenceCode = `${group.externalReferenceCode}&&${vocabulary.externalReferenceCode}`;
 
-										if (
-											!isGlobalSite &&
-											siteId?.toString() ===
-												Liferay.ThemeDisplay.getCompanyGroupId()
-										) {
-											return false;
-										}
+							fetchedExternalReferenceCodes.push(
+								externalReferenceCode
+							);
 
-										return true;
-									})
-									.map((item) => {
-										const externalReferenceCode = `${itemsFilteredForSites[index].externalReferenceCode}&&${item.externalReferenceCode}`;
+							return {
+								externalReferenceCode,
+								id: vocabulary.id.toString(),
+								name: vocabulary.name,
+							};
+						}),
+					}))
+				);
 
-										fetchedExternalReferenceCodes.push(
-											externalReferenceCode
-										); // Collect ExternalReferenceCodes to allow deselection of unavailable vocabularies
-
-										return {
-											externalReferenceCode,
-											id: item.id.toString(),
-											name: item.name,
-										};
-									}),
-							}))
-						);
-
-						setUnavailableVocabularyExternalReferenceCodes(
-							Array.from(
-								initialSelectedVocabularyExternalReferenceCodesSet
-							).filter(
-								(initialSelectedExternalReferenceCode) =>
-									!fetchedExternalReferenceCodes.includes(
-										initialSelectedExternalReferenceCode
-									)
+				setUnavailableVocabularyExternalReferenceCodes(
+					Array.from(
+						initialSelectedVocabularyExternalReferenceCodesSet
+					).filter(
+						(initialSelectedExternalReferenceCode) =>
+							!fetchedExternalReferenceCodes.includes(
+								initialSelectedExternalReferenceCode
 							)
-						);
-					})
-					.catch(() => setVocabularyTree([]));
+					)
+				);
 			})
 			.catch(() => setVocabularyTree([]))
 			.finally(() => setVocabularyTreeLoading(false));
