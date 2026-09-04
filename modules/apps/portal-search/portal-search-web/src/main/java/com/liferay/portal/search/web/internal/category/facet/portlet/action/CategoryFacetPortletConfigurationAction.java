@@ -6,9 +6,15 @@
 package com.liferay.portal.search.web.internal.category.facet.portlet.action;
 
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
+import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.GroupService;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.category.facet.constants.CategoryFacetPortletKeys;
+import com.liferay.portal.search.web.internal.category.facet.display.context.CategoryFacetConfigurationDisplayContext;
 import com.liferay.portlet.display.template.portlet.action.BaseConfigurationAction;
 
 import jakarta.portlet.PortletConfig;
@@ -46,6 +52,16 @@ public class CategoryFacetPortletConfigurationAction
 		httpServletRequest.setAttribute(
 			GroupLocalService.class.getName(), _groupLocalService);
 
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		httpServletRequest.setAttribute(
+			CategoryFacetConfigurationDisplayContext.class.getName(),
+			new CategoryFacetConfigurationDisplayContext(
+				_groupLocalService, _groupService, _jsonFactory,
+				themeDisplay.getLocale(), _siteConnectedGroupGroupProvider));
+
 		super.include(portletConfig, httpServletRequest, httpServletResponse);
 	}
 
@@ -54,5 +70,14 @@ public class CategoryFacetPortletConfigurationAction
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private GroupService _groupService;
+
+	@Reference
+	private JSONFactory _jsonFactory;
+
+	@Reference
+	private SiteConnectedGroupGroupProvider _siteConnectedGroupGroupProvider;
 
 }

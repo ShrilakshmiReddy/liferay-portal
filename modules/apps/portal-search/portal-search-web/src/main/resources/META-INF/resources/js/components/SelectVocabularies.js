@@ -131,11 +131,7 @@ function VocabularyTree({
 					}
 					key={item.externalReferenceCode}
 				>
-					<TreeView.ItemStack>
-						{item.descriptiveName_i18n?.[
-							Liferay.ThemeDisplay.getLanguageId()
-						] || item.descriptiveName}
-					</TreeView.ItemStack>
+					<TreeView.ItemStack>{item.name}</TreeView.ItemStack>
 
 					{item.children?.length ? (
 						<TreeView.Group items={item.children}>
@@ -175,6 +171,7 @@ function VocabularyTree({
 }
 
 function SelectVocabularies({
+	groups = [],
 	initialSelectedVocabularyExternalReferenceCodes = SELECT_OPTIONS.ALL,
 	namespace = '',
 	vocabularyExternalReferenceCodesInputName = '',
@@ -211,65 +208,36 @@ function SelectVocabularies({
 		}
 	}, []); //eslint-disable-line
 
-	const _fetchJSON = (url) =>
-		fetch(url, CONFIGURATION).then((response) => response.json());
+	const _getVocabulariesURL = ({assetLibraryKey, groupId}) => {
+		const scope = assetLibraryKey ? 'asset-libraries' : 'sites';
 
-	const _fetchAssetLibraries = () =>
-		_fetchJSON(
-			`/o/headless-asset-library/v1.0/asset-libraries?page=0&pageSize=0`
-		).then((response) =>
-			(response?.items || []).map((assetLibrary) => ({
-				...assetLibrary,
-				descriptiveName: assetLibrary.name,
-			}))
+		return `/o/headless-admin-taxonomy/v1.0/${scope}/${groupId}/taxonomy-vocabularies?page=0&pageSize=0`;
+	};
+
+	const _isOwnedByGroup = (group, vocabulary) => {
+		if (group.assetLibraryKey) {
+			return vocabulary.assetLibraryKey === group.assetLibraryKey;
+		}
+
+		return vocabulary.siteId?.toString() === group.groupId.toString();
+	};
+
+	const _fetchGroupVocabularies = async (group) => {
+		const response = await fetch(_getVocabulariesURL(group), CONFIGURATION);
+
+		const json = await response.json();
+
+		const vocabularies = (json?.items || []).filter((vocabulary) =>
+			_isOwnedByGroup(group, vocabulary)
 		);
 
-	const _fetchSites = () =>
-		fetch(`/api/jsonws/invoke`, {
-			body: new URLSearchParams({
-				cmd: JSON.stringify({
-					'/group/get-user-sites-groups': {},
-				}),
-				p_auth: Liferay.authToken,
-			}),
-			headers: new Headers({
-				'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
-				'Content-Type':
-					'application/x-www-form-urlencoded;charset=UTF-8',
-			}),
-			method: 'POST',
-		})
-			.then((response) => response.json())
-			.then((items) => items.filter(({site}) => !!site));
-
-	const _fetchVocabularies = (url, isOwnedByGroup) =>
-		_fetchJSON(url).then((response) =>
-			(response?.items || []).filter(isOwnedByGroup)
-		);
-
-	const _fetchAssetLibraryVocabularies = (assetLibrary) =>
-		_fetchVocabularies(
-			`/o/headless-admin-taxonomy/v1.0/asset-libraries/${assetLibrary.siteId}/taxonomy-vocabularies?page=0&pageSize=0`,
-			({assetLibraryKey}) =>
-				assetLibraryKey === assetLibrary.assetLibraryKey
-		).then((vocabularies) => ({group: assetLibrary, vocabularies}));
-
-	const _fetchSiteVocabularies = (site) =>
-		_fetchVocabularies(
-			`/o/headless-admin-taxonomy/v1.0/sites/${site.groupId}/taxonomy-vocabularies?page=0&pageSize=0`,
-			({siteId}) => siteId?.toString() === site.groupId.toString()
-		).then((vocabularies) => ({group: site, vocabularies}));
+		return {group, vocabularies};
+	};
 
 	const _handleFetchVocabularyTree = () => {
 		setVocabularyTreeLoading(true);
 
-		Promise.all([_fetchSites(), _fetchAssetLibraries()])
-			.then(([sites, assetLibraries]) =>
-				Promise.all([
-					...sites.map(_fetchSiteVocabularies),
-					...assetLibraries.map(_fetchAssetLibraryVocabularies),
-				])
-			)
+		Promise.all(groups.map(_fetchGroupVocabularies))
 			.then((groupVocabularies) => {
 				const fetchedExternalReferenceCodes = [];
 
@@ -435,6 +403,7 @@ function SelectVocabularies({
 }
 
 export default function ({
+	groups,
 	initialSelectedVocabularyExternalReferenceCodes,
 	learnResources,
 	namespace,
@@ -443,6 +412,7 @@ export default function ({
 	return (
 		<LearnResourcesContext.Provider value={learnResources}>
 			<SelectVocabularies
+				groups={groups}
 				initialSelectedVocabularyExternalReferenceCodes={
 					initialSelectedVocabularyExternalReferenceCodes
 				}
