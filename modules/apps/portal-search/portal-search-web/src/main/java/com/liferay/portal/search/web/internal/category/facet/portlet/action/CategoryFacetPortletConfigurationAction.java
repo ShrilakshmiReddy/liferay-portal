@@ -42,17 +42,17 @@ public class CategoryFacetPortletConfigurationAction
 
 		httpServletRequest.setAttribute(
 			AssetVocabularyLocalService.class.getName(),
-			assetVocabularyLocalService);
+			_assetVocabularyLocalService);
 		httpServletRequest.setAttribute(
-			GroupLocalService.class.getName(), groupLocalService);
+			GroupLocalService.class.getName(), _groupLocalService);
 
 		super.include(portletConfig, httpServletRequest, httpServletResponse);
 	}
 
 	@Reference
-	protected AssetVocabularyLocalService assetVocabularyLocalService;
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
 
 	@Reference
-	protected GroupLocalService groupLocalService;
+	private GroupLocalService _groupLocalService;
 
 }
