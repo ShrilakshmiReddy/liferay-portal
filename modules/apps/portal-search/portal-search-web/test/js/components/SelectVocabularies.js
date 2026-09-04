@@ -13,8 +13,14 @@ import SelectVocabularies from '../../../src/main/resources/META-INF/resources/j
 const ASSET_LIBRARY = {
 	assetLibraryKey: 'LIBRARY_KEY',
 	externalReferenceCode: 'LIBRARY_ERC',
+	groupId: 30456,
 	name: 'Library',
-	siteId: 30456,
+};
+
+const SITE = {
+	externalReferenceCode: 'SITE_ERC',
+	groupId: 20123,
+	name: 'Site',
 };
 
 const GLOBAL_VOCABULARY = {
@@ -32,13 +38,6 @@ const LIBRARY_VOCABULARY = {
 	siteId: null,
 };
 
-const SITE = {
-	descriptiveName: 'Site',
-	externalReferenceCode: 'SITE_ERC',
-	groupId: 20123,
-	site: true,
-};
-
 const SITE_VOCABULARY = {
 	externalReferenceCode: 'SITE_VOCABULARY_ERC',
 	id: 1,
@@ -50,21 +49,15 @@ const INPUT_NAME = 'groupVocabularyExternalReferenceCodes';
 
 function mockResponses() {
 	fetch.mockResponse(async (request) => {
-		if (request.url.includes('/api/jsonws/invoke')) {
-			return JSON.stringify([SITE, {groupId: 20456, site: false}]);
-		}
-
-		if (request.url.includes('/asset-libraries?')) {
-			return JSON.stringify({items: [ASSET_LIBRARY]});
-		}
-
 		if (request.url.includes(`/sites/${SITE.groupId}/`)) {
 			return JSON.stringify({
 				items: [SITE_VOCABULARY, LIBRARY_VOCABULARY, GLOBAL_VOCABULARY],
 			});
 		}
 
-		if (request.url.includes(`/asset-libraries/${ASSET_LIBRARY.siteId}/`)) {
+		if (
+			request.url.includes(`/asset-libraries/${ASSET_LIBRARY.groupId}/`)
+		) {
 			return JSON.stringify({
 				items: [LIBRARY_VOCABULARY, GLOBAL_VOCABULARY],
 			});
@@ -79,6 +72,7 @@ function renderSelectVocabularies(
 ) {
 	return render(
 		<SelectVocabularies
+			groups={[SITE, ASSET_LIBRARY]}
 			initialSelectedVocabularyExternalReferenceCodes={
 				initialSelectedVocabularyExternalReferenceCodes
 			}
