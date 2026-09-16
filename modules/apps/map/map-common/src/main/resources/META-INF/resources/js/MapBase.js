@@ -166,16 +166,13 @@ class MapBase extends EventEmitter {
 				: {};
 
 		if (!currentGeolocation.lat && !currentGeolocation.lng) {
-			getGeolocation(
-				(lat, lng) => {
-					this._initializeLocation({lat, lng});
-				},
-				() => {
-					this.zoom = 2;
-					this._initializeLocation({lat: 0, lng: 0});
-				},
-				{timeout: 10000}
-			);
+			this.zoom = 2;
+
+			this._initializeLocation({lat: 0, lng: 0});
+
+			getGeolocation((lat, lng) => {
+				this.position = {location: {lat, lng}};
+			});
 		}
 		else {
 			this._initializeLocation(currentGeolocation);
