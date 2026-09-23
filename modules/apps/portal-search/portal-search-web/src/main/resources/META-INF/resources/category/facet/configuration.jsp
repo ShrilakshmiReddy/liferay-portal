@@ -23,6 +23,7 @@ page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.search.web.internal.category.facet.configuration.CategoryFacetPortletInstanceConfiguration" %><%@
+page import="com.liferay.portal.search.web.internal.category.facet.display.context.CategoryFacetConfigurationDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.category.facet.portlet.CategoryFacetPortlet" %><%@
 page import="com.liferay.portal.search.web.internal.category.facet.portlet.CategoryFacetPortletPreferences" %><%@
 page import="com.liferay.portal.search.web.internal.category.facet.portlet.CategoryFacetPortletPreferencesImpl" %><%@
@@ -40,6 +41,8 @@ AssetVocabularyLocalService assetVocabularyLocalService = (AssetVocabularyLocalS
 GroupLocalService groupLocalService = (GroupLocalService)request.getAttribute(GroupLocalService.class.getName());
 
 CategoryFacetPortletPreferences categoryFacetPortletPreferences = new CategoryFacetPortletPreferencesImpl(assetVocabularyLocalService, groupLocalService, portletPreferences);
+
+CategoryFacetConfigurationDisplayContext categoryFacetConfigurationDisplayContext = (CategoryFacetConfigurationDisplayContext)request.getAttribute(CategoryFacetConfigurationDisplayContext.class.getName());
 %>
 
 <liferay-portlet:actionURL portletConfiguration="<%= true %>" var="configurationActionURL" />
@@ -94,6 +97,8 @@ CategoryFacetPortletPreferences categoryFacetPortletPreferences = new CategoryFa
 					module="{SelectVocabularies} from portal-search-web"
 					props='<%=
 						HashMapBuilder.<String, Object>put(
+							"groups", categoryFacetConfigurationDisplayContext.getGroupsJSONArray()
+						).put(
 							"initialSelectedVocabularyExternalReferenceCodes", StringUtil.merge(categoryFacetPortletPreferences.getGroupVocabularyExternalReferenceCodes())
 						).put(
 							"learnResources", LearnMessageUtil.getReactDataJSONObject("portal-search-web")
