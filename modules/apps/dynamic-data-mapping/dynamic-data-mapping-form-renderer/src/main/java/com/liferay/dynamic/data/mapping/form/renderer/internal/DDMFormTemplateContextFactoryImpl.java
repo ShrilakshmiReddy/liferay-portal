@@ -294,6 +294,14 @@ public class DDMFormTemplateContextFactoryImpl
 		templateContext.put(
 			"evaluatorURL", _getDDMFormContextProviderServletURL());
 		templateContext.put("groupId", ddmFormRenderingContext.getGroupId());
+
+		if (GetterUtil.getBoolean(
+				(Boolean)ddmFormRenderingContext.getProperty(
+					"objectEntryForm"))) {
+
+			templateContext.put("objectEntryForm", true);
+		}
+
 		templateContext.put(
 			"pages",
 			_getPages(ddmForm, ddmFormLayout, ddmFormRenderingContext));
