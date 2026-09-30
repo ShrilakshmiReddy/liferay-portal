@@ -110,6 +110,7 @@ public class DDMFormTemplateContextFactoryTest {
 			true);
 		Assert.assertEquals(
 			containerId, ddmFormTemplateContext.get("containerId"));
+		Assert.assertNull(ddmFormTemplateContext.get("objectEntryForm"));
 		Assert.assertFalse((boolean)ddmFormTemplateContext.get("readOnly"));
 		Assert.assertTrue(
 			(boolean)ddmFormTemplateContext.get("showSubmitButton"));
@@ -139,6 +140,8 @@ public class DDMFormTemplateContextFactoryTest {
 		).withPortletNamespace(
 			"_PORTLET_NAMESPACE_"
 		).withProperty(
+			"objectEntryForm", true
+		).withProperty(
 			"showPartialResultsToRespondents", true
 		).withReadOnly(
 			true
@@ -156,6 +159,8 @@ public class DDMFormTemplateContextFactoryTest {
 		Assert.assertEquals(
 			"/o/dynamic-data-mapping-form-context-provider/",
 			ddmFormTemplateContext.get("evaluatorURL"));
+		Assert.assertTrue(
+			(boolean)ddmFormTemplateContext.get("objectEntryForm"));
 		Assert.assertEquals(
 			"_PORTLET_NAMESPACE_",
 			ddmFormTemplateContext.get("portletNamespace"));
