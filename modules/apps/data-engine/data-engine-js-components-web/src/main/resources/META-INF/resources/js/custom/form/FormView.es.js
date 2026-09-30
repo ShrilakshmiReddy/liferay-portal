@@ -256,7 +256,8 @@ const useFormSubmit = ({apiRef, containerRef}) => {
  * Liferay.Component register.
  */
 const usePublicAPI = ({apiRef, containerRef, unstable_onEventRef}) => {
-	const {containerId, groupId, portletNamespace} = useConfig();
+	const {containerId, groupId, objectEntryForm, portletNamespace} =
+		useConfig();
 	const {
 		activePage,
 		ddmStructureLayoutId,
@@ -279,13 +280,13 @@ const usePublicAPI = ({apiRef, containerRef, unstable_onEventRef}) => {
 			dispatch(
 				formValidate({
 					activePage,
-					containerId,
 					defaultLanguageId,
 					editingLanguageId,
 					formId: containerRef.current
 						? getFormId(getFormNode(containerRef.current))
 						: 0,
 					groupId,
+					objectEntryForm,
 					pages,
 					portletNamespace,
 					rules,
@@ -293,13 +294,13 @@ const usePublicAPI = ({apiRef, containerRef, unstable_onEventRef}) => {
 				})
 			),
 		[
-			containerId,
 			dispatch,
 			activePage,
 			containerRef,
 			defaultLanguageId,
 			editingLanguageId,
 			groupId,
+			objectEntryForm,
 			pages,
 			portletNamespace,
 			rules,

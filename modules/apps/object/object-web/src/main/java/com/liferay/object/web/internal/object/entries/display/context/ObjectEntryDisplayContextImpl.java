@@ -871,6 +871,7 @@ public class ObjectEntryDisplayContextImpl
 		ddmFormRenderingContext.addProperty(
 			"availableLocales", LanguageUtil.getAvailableLocales(groupId));
 
+		ddmFormRenderingContext.addProperty("objectEntryForm", true);
 		ddmFormRenderingContext.setContainerId("editObjectEntry");
 
 		if (objectEntry != null) {

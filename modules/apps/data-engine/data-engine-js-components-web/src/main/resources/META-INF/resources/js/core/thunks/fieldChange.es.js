@@ -12,12 +12,12 @@ let REVALIDATE_UPDATES = [];
 const skipPageEvaluationFieldNames = ['name', 'requiredErrorMessage'];
 
 const needsPageEvaluation = (
-	containerId,
 	defaultLanguageId,
 	editingLanguageId,
-	fieldName
+	fieldName,
+	objectEntryForm
 ) => {
-	if (containerId === 'editObjectEntry') {
+	if (objectEntryForm) {
 		return editingLanguageId === defaultLanguageId;
 	}
 
@@ -67,11 +67,11 @@ const getEditedPages = ({
 let lastEditedPages = [];
 
 export default function fieldChange({
-	containerId,
 	defaultLanguageId,
 	editingLanguageId,
 	focusedField,
 	formId,
+	objectEntryForm,
 	objectFields,
 	pages,
 	portletNamespace,
@@ -120,10 +120,10 @@ export default function fieldChange({
 			evaluable &&
 			(viewMode ||
 				needsPageEvaluation(
-					containerId,
 					defaultLanguageId,
 					editingLanguageId,
-					fieldName
+					fieldName,
+					objectEntryForm
 				))
 		) {
 			try {
