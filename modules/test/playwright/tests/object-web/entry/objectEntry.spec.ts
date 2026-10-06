@@ -2103,7 +2103,7 @@ test.describe('Manage object entries through Object Definition widget', () => {
 		async ({apiHelpers, page, pageEditorPage, site}) => {
 
 			// Add two object definitions with friendly URL customization and
-			// differently named required rich text fields
+			// differently named required text fields
 
 			const objectDefinitions: ObjectDefinition[] = [];
 
@@ -2115,9 +2115,9 @@ test.describe('Manage object entries through Object Definition widget', () => {
 						objectFields: generateObjectFields({
 							objectFieldBusinessTypes: [
 								{
-									businessType: 'RichText',
-									label: {en_US: 'richTextField' + i},
-									name: 'richTextField' + i,
+									businessType: 'Text',
+									label: {en_US: 'textField' + i},
+									name: 'textField' + i,
 									required: true,
 								},
 							],
@@ -2168,13 +2168,14 @@ test.describe('Manage object entries through Object Definition widget', () => {
 			// Add an entry through the second widget, whose form stays open
 			// after saving, and then through the first widget
 
-			const getRichTextInput = (objectDefinition: ObjectDefinition) =>
+			const getTextInput = (objectDefinition: ObjectDefinition) =>
 				page
 					.locator(`[id="p_p_id_${getPortletId(objectDefinition)}_"]`)
-					.locator(
-						`[data-qa-id="${objectDefinition.objectFields.find(({name}) => name.startsWith('richTextField')).name}"]`
-					)
-					.locator('.ck-editor__editable');
+					.getByLabel(
+						objectDefinition.objectFields.find(({name}) =>
+							name.startsWith('textField')
+						).name
+					);
 
 			const [objectDefinition1, objectDefinition2] = objectDefinitions;
 
@@ -2186,26 +2187,26 @@ test.describe('Manage object entries through Object Definition widget', () => {
 					`[id="p_p_id_${getPortletId(objectDefinition)}_"]`
 				);
 
-				const richTextInput = getRichTextInput(objectDefinition);
+				const textInput = getTextInput(objectDefinition);
 
 				await clickAndExpectToBeVisible({
-					target: richTextInput,
+					target: textInput,
 					trigger: portlet.getByLabel(
 						'Add ' + objectDefinition.label['en_US']
 					),
 				});
 
-				await richTextInput.fill(getRandomString());
+				await textInput.fill(getRandomString());
 
 				const friendlyURL = getRandomString().toLowerCase();
 
 				await portlet
-					.locator('[name$="friendlyURL"]')
+					.getByRole('textbox', {name: 'Friendly URL'})
 					.fill(friendlyURL);
 
 				if (openObjectDefinition) {
 					await expect(
-						getRichTextInput(openObjectDefinition)
+						getTextInput(openObjectDefinition)
 					).toBeVisible();
 				}
 
